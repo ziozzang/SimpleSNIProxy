@@ -1,6 +1,19 @@
-FROM golang:alpine 
-RUN mkdir /app 
-ADD . /app/ 
+FROM golang:alpine as builder
+
+RUN apk add git
+
 WORKDIR /app 
-RUN go build -o main . 
-CMD ["/app/main"]
+
+COPY . /app/ 
+
+RUN go mod init github.com/mparvin/sniproxy
+RUN go build -o sniproxy . 
+
+# Run in apline
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/sniproxy .
+
+CMD ["/app/sniproxy"]
